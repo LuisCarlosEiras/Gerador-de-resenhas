@@ -141,18 +141,6 @@ def gerar_descricao_gemini(resenha):
         st.error(f"Erro ao gerar descrição conceitual: {str(e)}")
         return None
 
-def exibir_quadrinhos(img):
-    """
-    Divide a imagem gerada em quatro partes para criar uma história em quadrinhos
-    """
-    width, height = img.size
-    quadrinhos = [img.crop((0, 0, width//2, height//2)), img.crop((width//2, 0, width, height//2)),
-                  img.crop((0, height//2, width//2, height)), img.crop((width//2, height//2, width, height))]
-    
-    st.subheader("História em Quadrinhos:")
-    for i, quadrinho in enumerate(quadrinhos):
-        st.image(quadrinho, caption=f"Quadrinho {i+1}")
-
 def main():
     st.title("Antes de comprar, escreva sua própria resenha do livro")
     
@@ -185,7 +173,11 @@ def main():
                             # Baixa e mostra a imagem
                             response = requests.get(image_url)
                             img = Image.open(BytesIO(response.content))
-                            exibir_quadrinhos(img)
+                            st.image(
+                                img,
+                                caption="Imagem gerada pelo DALL-E 3",
+                                use_column_width=True
+                            )
                             
                             # Mostra o prompt usado
                             with st.expander("Ver prompt usado para gerar a imagem"):

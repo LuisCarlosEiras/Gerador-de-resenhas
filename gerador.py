@@ -19,7 +19,7 @@ def gerar_resenha(livro):
     Gera uma resenha estruturada do livro usando o modelo Gemini Pro
     """
     model = genai.GenerativeModel('gemini-pro')
-    
+
     def gerar_paragrafo(prompt, contexto=""):
         response = model.generate_content(
             f"{contexto}\n\n{prompt}",
@@ -52,7 +52,8 @@ def gerar_resenha(livro):
     
     for prompt in prompts:
         paragrafo = gerar_paragrafo(prompt, contexto_atual)
-        paragraphs.append(paragrafo)
+        if "não há informações" not in paragrafo.lower() and "não contém informações" not in paragrafo.lower():
+            paragraphs.append(paragrafo)
         contexto_atual += f"\n{paragrafo}"
 
     def formatar_paragrafo(paragrafo):
@@ -87,8 +88,7 @@ def criar_prompt_imagem(resenha, livro):
     - Foque em paisagens, natureza, objetos simbólicos ou padrões abstratos
     
     Formato do prompt:
-    "Create a 9:6 artistic [estilo artístico] illustration showing a [descrição segura e abstrata] with [elementos visuais e cores]"
-    """
+    "Create a 9:6 artistic [estilo artístico] illustration showing a [descrição segura e abstrata] with [elementos visuais e cores]"""
     
     try:
         response = model.generate_content(prompt_para_gemini)
@@ -115,29 +115,7 @@ def gerar_imagem_dalle(prompt):
         )
         return response.data[0].url
     except openai.OpenAIError as e:
-        if "content_policy_violation" in str(e).lower() or "content filters" in str(e).lower():
-            st.warning("Tentando gerar uma versão mais abstrata da imagem...")
-            try:
-                abstract_prompt = """Create a 9:6 abstract artistic illustration using colors and shapes 
-                that represent the essence of literature and storytelling. Use subtle symbolism and elegant 
-                composition. Professional, elegant, suitable for all audiences."""
-                
-                response = openai.Image.create(
-                    model="dall-e-3",
-                    prompt=abstract_prompt,
-                    size="1792x1024",
-                    quality="standard",
-                    n=1,
-                )
-                return response.data[0].url
-            except Exception as e2:
-                st.error(f"Erro na segunda tentativa: {str(e2)}")
-                return None
-        else:
-            st.error(f"Erro ao gerar imagem: {str(e)}")
-            return None
-    except Exception as e:
-        st.error(f"Erro inesperado: {str(e)}")
+        st.error(f"Erro ao gerar imagem: {str(e)}")
         return None
 
 def gerar_descricao_gemini(resenha):
@@ -163,6 +141,18 @@ def gerar_descricao_gemini(resenha):
         st.error(f"Erro ao gerar descrição conceitual: {str(e)}")
         return None
 
+def exibir_quadrinhos(img):
+    """
+    Divide a imagem gerada em quatro partes para criar uma história em quadrinhos
+    """
+    width, height = img.size
+    quadrinhos = [img.crop((0, 0, width//2, height//2)), img.crop((width//2, 0, width, height//2)),
+                  img.crop((0, height//2, width//2, height)), img.crop((width//2, height//2, width, height))]
+    
+    st.subheader("História em Quadrinhos:")
+    for i, quadrinho in enumerate(quadrinhos):
+        st.image(quadrinho, caption=f"Quadrinho {i+1}")
+
 def main():
     st.title("Antes de comprar, escreva sua própria resenha do livro")
     
@@ -170,55 +160,45 @@ def main():
     if 'image_url' not in st.session_state:
         st.session_state.image_url = None
 
-    # Form para captura do Enter
-    with st.form(key='resenha_form'):
-        livro = st.text_input(
-            "Digite o título do livro e o autor para gerar a resenha, separados por vírgula:"
-        )
-        submit_button = st.form_submit_button(label='Gerar Resenha')
+    # Input direto (sem botão)
+    livro = st.text_input("Digite o título do livro e o autor para gerar a resenha, separados por vírgula:")
 
-        if submit_button and livro:
-            with st.spinner('Gerando resenha...'):
-                try:
-                    # Gera a resenha
-                    resenha = gerar_resenha(livro)
-                    st.subheader("Resenha Gerada:")
-                    st.write(resenha)
-                    
-                    # Gera a visualização
-                    st.subheader("Visualização Artística:")
-                    with st.spinner('Gerando imagem...'):
-                        # Gera o prompt
-                        prompt_dalle = criar_prompt_imagem(resenha, livro)
-                        
-                        if prompt_dalle:
-                            # Gera a imagem
-                            image_url = gerar_imagem_dalle(prompt_dalle)
-                            if image_url:
-                                st.session_state.image_url = image_url
-                                # Baixa e mostra a imagem
-                                response = requests.get(image_url)
-                                img = Image.open(BytesIO(response.content))
-                                st.image(
-                                    img,
-                                    caption="Imagem gerada pelo DALL-E 3",
-                                    use_column_width=True
-                                )
-                                
-                                # Mostra o prompt usado
-                                with st.expander("Ver prompt usado para gerar a imagem"):
-                                    st.write(prompt_dalle)
-                            
-                            # Gera e mostra a descrição conceitual
-                            descricao = gerar_descricao_gemini(resenha)
-                            if descricao:
-                                with st.expander("Ver análise conceitual da visualização"):
-                                    st.write(descricao)
+    if livro:
+        with st.spinner('Gerando resenha...'):
+            try:
+                # Gera a resenha
+                resenha = gerar_resenha(livro)
+                st.subheader("Resenha Gerada:")
+                st.write(resenha)
                 
-                except Exception as e:
-                    st.error(f"Erro ao processar sua solicitação: {str(e)}")
-        elif submit_button:
-            st.warning("Por favor, insira o título e autor do livro.")
+                # Gera a visualização
+                st.subheader("Visualização Artística:")
+                with st.spinner('Gerando imagem...'):
+                    # Gera o prompt
+                    prompt_dalle = criar_prompt_imagem(resenha, livro)
+                    
+                    if prompt_dalle:
+                        # Gera a imagem
+                        image_url = gerar_imagem_dalle(prompt_dalle)
+                        if image_url:
+                            st.session_state.image_url = image_url
+                            # Baixa e mostra a imagem
+                            response = requests.get(image_url)
+                            img = Image.open(BytesIO(response.content))
+                            exibir_quadrinhos(img)
+                            
+                            # Mostra o prompt usado
+                            with st.expander("Ver prompt usado para gerar a imagem"):
+                                st.write(prompt_dalle)
+                        
+                        # Gera e mostra a descrição conceitual
+                        descricao = gerar_descricao_gemini(resenha)
+                        if descricao:
+                            with st.expander("Ver análise conceitual da visualização"):
+                                st.write(descricao)
+            
+            except Exception as e:
+                st.error(f"Erro ao processar sua solicitação: {str(e)}")
 
 if __name__ == "__main__":
     main()

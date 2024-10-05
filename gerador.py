@@ -52,11 +52,13 @@ def gerar_resenha(livro):
     
     for prompt in prompts:
         paragrafo = gerar_paragrafo(prompt, contexto_atual)
-        # Filtrar os comentários desnecessários
+        # Filtrar comentários e texto irrelevante
         if not any(termo in paragrafo.lower() for termo in [
             "não há informações", 
             "não contém informações",
-            "não há um segundo parágrafo"
+            "não há um segundo parágrafo",
+            "não fornece informações",
+            "não há dados disponíveis"
         ]):
             paragraphs.append(paragrafo)
         contexto_atual += f"\n{paragrafo}"

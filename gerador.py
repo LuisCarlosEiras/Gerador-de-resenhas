@@ -156,7 +156,7 @@ def main():
         st.session_state.image_url = None
 
     # Input direto (sem botão)
-    livro = st.text_input("Digite o título do livro e o autor para gerar a resenha, separados por vírgula:")
+    livro = st.text_input("Digite o título do livro e o autor, separados por vírgula, e tecle Enter:")
 
     if livro:
         with st.spinner('Gerando resenha...'):

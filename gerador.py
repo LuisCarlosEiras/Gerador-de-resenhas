@@ -1,5 +1,6 @@
 import streamlit as st
 import google.generativeai as genai
+import openai
 import os
 from dotenv import load_dotenv
 from PIL import Image
@@ -11,6 +12,7 @@ load_dotenv()
 
 # Configura as APIs
 genai.configure(api_key=os.getenv('GOOGLE_API_KEY'))
+openai.api_key = os.getenv('OPENAI_API_KEY')
 
 def gerar_resenha(livro):
     """
@@ -72,14 +74,14 @@ def gerar_resenha(livro):
 
 def criar_prompt_imagem(resenha, livro):
     """
-    Cria um prompt otimizado para o modelo de geração de imagens Google Imagen 3 (hipotético)
+    Cria um prompt seguro e otimizado para o DALL-E 3
     """
     model = genai.GenerativeModel('gemini-pro')
     
     prompt_para_gemini = f"""Com base nesta resenha do livro '{livro}':
     {resenha[:1000]}...
     
-    Crie um prompt artístico CONSERVADOR e SEGURO para uma ilustração abstrata que:
+    Crie um prompt artístico CONSERVADOR e SEGURO para o DALL-E 3 que:
     1. Foque em elementos abstratos e simbólicos que representem os temas do livro
     2. Evite menções a violência, conteúdo adulto ou temas sensíveis
     3. Use metáforas visuais apropriadas para todos os públicos
@@ -91,7 +93,9 @@ def criar_prompt_imagem(resenha, livro):
     - Evite referências a marcas ou direitos autorais
     - Use linguagem neutra e apropriada
     - Foque em paisagens, natureza, objetos simbólicos ou padrões abstratos
-    """
+    
+    Formato do prompt:
+    "Create a 9:6 artistic [estilo artístico] illustration showing a [descrição segura e abstrata] with [elementos visuais e cores]"""
     
     try:
         response = model.generate_content(prompt_para_gemini)
@@ -102,19 +106,22 @@ def criar_prompt_imagem(resenha, livro):
         st.error(f"Erro ao gerar prompt: {str(e)}")
         return None
 
-def gerar_imagem_google(prompt):
+def gerar_imagem_dalle(prompt):
     """
-    Gera uma imagem usando o Google Imagen (hipotético)
+    Gera uma imagem usando DALL-E 3 com tratamento de erros robusto
     """
     try:
-        # Supondo que o Google disponibilize um método para gerar imagens
-        response = genai.Imagen.create(
-            model="imagen-3",
-            prompt=prompt,
+        safe_prompt = f"{prompt} Safe for all audiences, non-controversial, abstract artistic style."
+        
+        response = openai.Image.create(
+            model="dall-e-3",
+            prompt=safe_prompt,
             size="1792x1024",
+            quality="standard",
+            n=1,
         )
         return response.data[0].url
-    except Exception as e:
+    except openai.OpenAIError as e:
         st.error(f"Erro ao gerar imagem: {str(e)}")
         return None
 
@@ -126,7 +133,7 @@ def main():
         st.session_state.image_url = None
 
     # Input direto (sem botão)
-    livro = st.text_input("Digite o título do livro e o autor para gerar a resenha, separados por vírgula:")
+    livro = st.text_input("Digite o título do livro e o autor, separados por vírgula, e tecle Enter:")
 
     if livro:
         with st.spinner('Gerando resenha...'):
@@ -138,11 +145,11 @@ def main():
                 # Gera a visualização
                 with st.spinner('Gerando imagem...'):
                     # Gera o prompt
-                    prompt_google = criar_prompt_imagem(resenha, livro)
+                    prompt_dalle = criar_prompt_imagem(resenha, livro)
                     
-                    if prompt_google:
+                    if prompt_dalle:
                         # Gera a imagem
-                        image_url = gerar_imagem_google(prompt_google)
+                        image_url = gerar_imagem_dalle(prompt_dalle)
                         if image_url:
                             st.session_state.image_url = image_url
                             # Baixa e mostra a imagem
@@ -150,7 +157,7 @@ def main():
                             img = Image.open(BytesIO(response.content))
                             st.image(
                                 img,
-                                caption="Imagem gerada pelo Google Imagen",
+                                caption="Imagem gerada pelo DALL-E 3",
                                 use_column_width=True
                             )
             

@@ -52,7 +52,12 @@ def gerar_resenha(livro):
     
     for prompt in prompts:
         paragrafo = gerar_paragrafo(prompt, contexto_atual)
-        if "não há informações" not in paragrafo.lower() and "não contém informações" not in paragrafo.lower():
+        # Filtrar os comentários desnecessários
+        if not any(termo in paragrafo.lower() for termo in [
+            "não há informações", 
+            "não contém informações",
+            "não há um segundo parágrafo"
+        ]):
             paragraphs.append(paragrafo)
         contexto_atual += f"\n{paragrafo}"
 
@@ -149,18 +154,16 @@ def main():
         st.session_state.image_url = None
 
     # Input direto (sem botão)
-    livro = st.text_input("Digite o título do livro e o autor, separados por vírgula, e tecle Enter:")
+    livro = st.text_input("Digite o título do livro e o autor para gerar a resenha, separados por vírgula:")
 
     if livro:
         with st.spinner('Gerando resenha...'):
             try:
                 # Gera a resenha
                 resenha = gerar_resenha(livro)
-                st.subheader("Resenha Gerada:")
                 st.write(resenha)
                 
                 # Gera a visualização
-                st.subheader("Visualização Artística:")
                 with st.spinner('Gerando imagem...'):
                     # Gera o prompt
                     prompt_dalle = criar_prompt_imagem(resenha, livro)

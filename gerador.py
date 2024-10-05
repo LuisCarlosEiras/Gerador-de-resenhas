@@ -125,29 +125,6 @@ def gerar_imagem_dalle(prompt):
         st.error(f"Erro ao gerar imagem: {str(e)}")
         return None
 
-def gerar_descricao_gemini(resenha):
-    """
-    Gera uma descrição conceitual da visualização usando Gemini
-    """
-    model = genai.GenerativeModel('gemini-pro')
-    
-    prompt_descricao = f"""Analise esta resenha e crie uma descrição artística conceitual:
-    {resenha[:500]}...
-    
-    Descreva:
-    1. Os elementos visuais principais que representam a obra
-    2. O simbolismo presente
-    3. A atmosfera e tom visual
-    4. Como estes elementos se conectam com os temas do livro
-    """
-    
-    try:
-        response = model.generate_content(prompt_descricao)
-        return response.text
-    except Exception as e:
-        st.error(f"Erro ao gerar descrição conceitual: {str(e)}")
-        return None
-
 def main():
     st.title("Antes de comprar, escreva sua própria resenha do livro")
     
@@ -156,7 +133,7 @@ def main():
         st.session_state.image_url = None
 
     # Input direto (sem botão)
-    livro = st.text_input("Digite o título do livro e o autor, separados por vírgula, e tecle Enter:")
+    livro = st.text_input("Digite o título do livro e o autor para gerar a resenha, separados por vírgula:")
 
     if livro:
         with st.spinner('Gerando resenha...'):
@@ -183,16 +160,6 @@ def main():
                                 caption="Imagem gerada pelo DALL-E 3",
                                 use_column_width=True
                             )
-                            
-                            # Mostra o prompt usado
-                            with st.expander("Ver prompt usado para gerar a imagem"):
-                                st.write(prompt_dalle)
-                        
-                        # Gera e mostra a descrição conceitual
-                        descricao = gerar_descricao_gemini(resenha)
-                        if descricao:
-                            with st.expander("Ver análise conceitual da visualização"):
-                                st.write(descricao)
             
             except Exception as e:
                 st.error(f"Erro ao processar sua solicitação: {str(e)}")

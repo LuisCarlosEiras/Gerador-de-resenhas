@@ -16,7 +16,7 @@ openai.api_key = os.getenv('OPENAI_API_KEY')
 
 def gerar_resenha(livro):
     """
-    Gera uma resenha estruturada do livro usando o modelo Gemini Pro
+    Gera uma resenha estruturada do livro usando o modelo Gemini Pro, sem títulos nos parágrafos
     """
     model = genai.GenerativeModel('gemini-pro')
 
@@ -32,19 +32,19 @@ def gerar_resenha(livro):
         )
         return response.text.strip()
 
-    estrutura_resenha = f"""Como crítico literário especializado, escreverei uma resenha acadêmica do livro '{livro}' em quatro parágrafos:
-
-    1. Introdução: Contextualização da obra e autor
-    2. Análise: Aspectos técnicos e estilísticos
-    3. Interpretação: Temas principais e significados
-    4. Avaliação final: Contribuição para o campo literário
+    estrutura_resenha = f"""Escreva uma resenha acadêmica do livro '{livro}' em quatro parágrafos, sem incluir títulos:
+    
+    1. Contextualize a obra e o autor, mencionando o período histórico e o contexto literário.
+    2. Analise aspectos técnicos, como estrutura narrativa, estilo de escrita e técnicas literárias empregadas.
+    3. Explore os temas principais, simbolismos e significados mais profundos da obra.
+    4. Avalie criticamente a contribuição da obra para o campo literário, sem repetir conclusões anteriores.
     """
     
     prompts = [
-        (f"{estrutura_resenha}\n\nEscreva APENAS o primeiro parágrafo com foco na contextualização da obra e seu autor, incluindo informações sobre o período histórico e contexto literário:"),
-        (f"Considerando o parágrafo anterior sobre '{livro}', escreva APENAS o segundo parágrafo, focando na análise dos aspectos técnicos como estrutura narrativa, estilo de escrita e técnicas literárias empregadas:"),
-        (f"Com base nos parágrafos anteriores sobre '{livro}', escreva APENAS o terceiro parágrafo, explorando os temas principais, simbolismos e significados mais profundos da obra:"),
-        (f"Para finalizar a resenha de '{livro}', escreva APENAS o parágrafo final com uma avaliação crítica da contribuição da obra para o campo literário, SEM repetir conclusões anteriores:")
+        (f"{estrutura_resenha}\n\nEscreva APENAS o primeiro parágrafo, contextualizando a obra e o autor:"),
+        (f"Agora, escreva APENAS o segundo parágrafo, analisando os aspectos técnicos do livro:"),
+        (f"Em seguida, escreva APENAS o terceiro parágrafo, explorando os temas e simbolismos principais:"),
+        (f"Por fim, escreva APENAS o parágrafo final, com uma avaliação crítica da contribuição do livro para o campo literário:")
     ]
     
     paragraphs = []
@@ -156,7 +156,7 @@ def main():
         st.session_state.image_url = None
 
     # Input direto (sem botão)
-    livro = st.text_input("Digite o título do livro e o autor, separados por vírgula, e tecle Enter:")
+    livro = st.text_input("Digite o título do livro e o autor para gerar a resenha, separados por vírgula:")
 
     if livro:
         with st.spinner('Gerando resenha...'):

@@ -28,25 +28,39 @@ def gerar_resenha(livro):
         )
         return response.text.strip()
 
-    # Prompt mais específico para aumentar a precisão
-    prompt_base = f"""Como um crítico literário especializado, escreverei uma resenha acadêmica detalhada e precisa do livro '{livro}'. 
-    A resenha deve incluir:
-    - Análise do contexto histórico e literário
-    - Avaliação crítica do estilo narrativo e técnicas literárias
-    - Discussão dos temas principais e sua relevância
-    - Conclusão com uma avaliação objetiva da obra"""
+    # Estrutura clara para cada parágrafo
+    estrutura_resenha = f"""Como crítico literário especializado, escreverei uma resenha acadêmica do livro '{livro}' em quatro parágrafos:
+
+    1. Introdução: Contextualização da obra e autor
+    2. Análise: Aspectos técnicos e estilísticos
+    3. Interpretação: Temas principais e significados
+    4. Avaliação final: Contribuição para o campo literário
+    """
     
-    paragraph1 = gerar_paragrafo(f"{prompt_base}\n\nPrimeiro parágrafo focando na contextualização e apresentação geral da obra:")
-    paragraph2 = gerar_paragrafo("Segundo parágrafo analisando aspectos técnicos e estilísticos:", f"{prompt_base}\n{paragraph1}")
-    paragraph3 = gerar_paragrafo("Terceiro parágrafo explorando temas e significados:", f"{prompt_base}\n{paragraph1}\n{paragraph2}")
-    paragraph4 = gerar_paragrafo("Quarto parágrafo com conclusão e avaliação final:", f"{prompt_base}\n{paragraph1}\n{paragraph2}\n{paragraph3}")
+    prompts = [
+        (f"{estrutura_resenha}\n\nEscreva APENAS o primeiro parágrafo com foco na contextualização da obra e seu autor, incluindo informações sobre o período histórico e contexto literário:"),
+        
+        (f"Considerando o parágrafo anterior sobre '{livro}', escreva APENAS o segundo parágrafo, focando na análise dos aspectos técnicos como estrutura narrativa, estilo de escrita e técnicas literárias empregadas:"),
+        
+        (f"Com base nos parágrafos anteriores sobre '{livro}', escreva APENAS o terceiro parágrafo, explorando os temas principais, simbolismos e significados mais profundos da obra:"),
+        
+        (f"Para finalizar a resenha de '{livro}', escreva APENAS o parágrafo final com uma avaliação crítica da contribuição da obra para o campo literário, SEM repetir conclusões anteriores:")
+    ]
+    
+    paragraphs = []
+    contexto_atual = ""
+    
+    for i, prompt in enumerate(prompts):
+        paragrafo = gerar_paragrafo(prompt, contexto_atual)
+        paragraphs.append(paragrafo)
+        contexto_atual += f"\n{paragrafo}"
 
     def formatar_paragrafo(paragrafo):
         sentences = paragrafo.split('.')
         formatted_sentences = [s.strip() + '.' for s in sentences if s.strip()]
         return ' '.join(formatted_sentences)
 
-    paragraphs = [formatar_paragrafo(p) for p in [paragraph1, paragraph2, paragraph3, paragraph4]]
+    paragraphs = [formatar_paragrafo(p) for p in paragraphs]
     
     return '\n\n'.join(paragraphs)
 
@@ -67,7 +81,6 @@ def gerar_imagem_da_resenha(resenha):
     
     try:
         response = model.generate_content(prompt_imagem)
-        # Aqui você implementaria a lógica para salvar/exibir a imagem
         return response.text
     except Exception as e:
         st.error(f"Erro ao gerar imagem: {str(e)}")

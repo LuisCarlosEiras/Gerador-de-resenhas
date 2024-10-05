@@ -175,7 +175,7 @@ def main():
         livro = st.text_input(
             "Digite o título do livro e o autor para gerar a resenha, separados por vírgula:"
         )
-        submit_button = st.form_submit_button(label='Gerar Resenha')
+        # submit_button = st.form_submit_button(label='Gerar Resenha')
 
         if submit_button and livro:
             with st.spinner('Gerando resenha...'):

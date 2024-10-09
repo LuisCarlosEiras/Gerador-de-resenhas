@@ -68,7 +68,7 @@ def gerar_resenha(livro):
     return '\n\n'.join(paragraphs)
 
 def main():
-    st.title("Antes de comprar, escreva sua própria resenha do livro")
+    st.title("Antes de comprar, escreva a resenha do livro")
     
     # Input direto (sem botão)
     livro = st.text_input("Digite o título do livro e o autor, separados por vírgula, e tecle Enter:")

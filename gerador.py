@@ -71,7 +71,7 @@ def main():
     st.title("Antes de comprar, escreva a resenha do livro")
     
     # Input direto (sem botão)
-    livro = st.text_input("Digite o título do livro e o autor, separados por vírgula, e tecle Enter:")
+    livro = st.text_input("Para maior precisão, digite o que você sabe sobre o livro: título, o autor, gênero (ensaio, romance, poesia, teatro etc.), área (tecnologia, física, jornalismo, medicina etc.) e tecle Enter:")
 
     if livro:
         with st.spinner('Gerando resenha...'):
